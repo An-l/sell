@@ -2,7 +2,7 @@
 const chalk = require('chalk')
 const semver = require('semver')
 const packageConfig = require('../package.json')
-const sell = require('selljs')
+const sell = require('shelljs')
 function exec (cmd) {
   return require('child_process').execSync(cmd).toString().trim()
 }
