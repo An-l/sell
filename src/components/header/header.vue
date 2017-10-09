@@ -41,7 +41,7 @@
           </div>
 
           <div class="discount">
-
+            <h2>优惠信息</h2>
           </div>
         </div>
       </div>
