@@ -2,7 +2,7 @@
   <div class="goods">
     <div class="menu-wrapper">
       <ul>
-        <li v-for="(good, index) in goods" :key="index" class="menu-item">
+        <li v-for="(good, index) in goods" :class="{'current': currentIndex === index}" @click="selectMenu(index, $event)" :key="index" class="menu-item">
           <span class="text">
             <span v-show="good.type > 0" class="icon" :class="classMap[good.type]"></span>{{good.name}}
           </span>
@@ -10,8 +10,8 @@
       </ul>
     </div>
     <div class="foods-wrapper">
-      <ul>
-        <li v-for="(item, index) in goods" :key="index" class="food-list">
+      <ul class="content">
+        <li v-for="(item, index) in goods" :key="index" class="food-list food-list-hook">
           <h2 class="title">{{item.name}}</h2>
           <ul>
             <li v-for="(food, idex) in item.foods" :key="idex" class="food-item border-1px">
@@ -29,17 +29,24 @@
                   <span class="now">￥{{food.price}}</span>
                   <span class="old" v-show="food.oldPrice">￥{{food.oldPrice}}</span>
                 </div>
+                <div class="cartcontrol-wrapper">
+                  <cartcontrol :food="food" @cartAdd="_drop"></cartcontrol>
+                </div>
               </div>
             </li>
           </ul>
         </li>
       </ul>
     </div>
+    <shopcart :delivery-price="seller.deliveryPrice" :min-price="seller.minPrice" :select-foods="selectFoods" ref="shopcart"></shopcart>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+import BScroll from 'better-scroll'
+import shopcart from 'components/shopcart/shopcart'
+import cartcontrol from 'components/cartcontrol/cartcontrol'
 
 const ERR_OK = 0
 
@@ -51,7 +58,32 @@ export default {
   },
   data() {
     return {
-      goods: []
+      goods: [],
+      listHeight: [],
+      scrollY: 0
+    }
+  },
+  computed: {
+    currentIndex() {
+      for (let i = 0; i < this.listHeight.length; i++) {
+        let height1 = this.listHeight[i]
+        let height2 = this.listHeight[i + 1]
+        if (!height2 || (this.scrollY >= height1 && this.scrollY < height2)) {
+          return i
+        }
+      }
+      return 0
+    },
+    selectFoods() {
+      let foods = []
+      this.goods.forEach(function(good) {
+        good.foods.forEach((food) => {
+          if (food.count > 0) {
+            foods.push(food)
+          }
+        })
+      }, this)
+      return foods
     }
   },
   created() {
@@ -63,10 +95,58 @@ export default {
           return
         }
         this.goods = res.data.goods
+
+        this.$nextTick(() => {
+          this._initScroll()
+          this._calculateHeight()
+        })
       })
       .catch(function(error) {
         console.log(error)
       })
+  },
+  methods: {
+    selectMenu(index, event) {
+      if (!event._constructed) {
+        return
+      }
+      let foodList = document.getElementsByClassName('food-list-hook')
+      let el = foodList[index]
+      this.foodsScroll.scrollToElement(el, 500)
+    },
+    _initScroll() {
+      this.menuScroll = new BScroll('.menu-wrapper', {
+        click: true
+      })
+      this.foodsScroll = new BScroll('.foods-wrapper', {
+        click: true,
+        probeType: 3
+      })
+
+      this.foodsScroll.on('scroll', (pos) => {
+        this.scrollY = Math.abs(Math.round(pos.y))
+      })
+    },
+    _calculateHeight() {
+      let foodList = document.getElementsByClassName('food-list-hook')
+      let height = 0
+      this.listHeight.push(height)
+      for (let i = 0; i < foodList.length; i++) {
+        let item = foodList[i]
+        height += item.clientHeight
+        this.listHeight.push(height)
+      }
+    },
+    _drop(target) {
+      // 优化，异步执行下落动画
+      this.$nextTick(() => {
+        this.$refs.shopcart.drop(target)
+      })
+    }
+  },
+  components: {
+    shopcart,
+    cartcontrol
   }
 }
 </script>
@@ -91,10 +171,20 @@ export default {
       display: table;
       width: 56px;
       height: 54px;
-      margin: 0 auto;
+      padding: 0 12px;
       line-height: 14px;
-      @include border-1px(rgba(7, 17, 27, 0.1));
+
       font-size: 0;
+      &.current {
+        position: relative;
+        margin-top: -1px;
+        z-index: 10;
+        background: #fff;
+        .text {
+          font-weight: 700;
+          @include border-none();
+        }
+      }
 
       .icon {
         display: inline-block;
@@ -127,6 +217,10 @@ export default {
         font-size: 12px; // color: rgb(240, 20, 20);
         line-height: 14px;
         vertical-align: middle;
+        @include border-1px(rgba(7, 17, 27, 0.1));
+        &:last-child {
+          // @include border-none();
+        }
       }
     }
   }
@@ -172,12 +266,12 @@ export default {
           .desc,
           .extra {
             margin-bottom: 8px;
-            line-height: 10px;
+            line-height: 12px;
             font-size: 10px;
             color: rgb(147, 153, 159);
           }
           .extra {
-            .sell-count {
+            .sellCount {
               margin-right: 12px;
             }
           }
@@ -198,6 +292,11 @@ export default {
         }
       }
     }
+  }
+  .cartcontrol-wrapper {
+    position: absolute;
+    bottom: 10px;
+    right: 0;
   }
 }
 </style>
