@@ -19,13 +19,14 @@
         </div>
       </div>
       <div class="ball-container">
-        <div v-for="(ball, index) in balls" :key="index">
-          <transition name="drop" v-on:before-enter="beforeDrop" v-on:enter="dropping" v-on:after-enter="afterDrop">
-            <div v-show="ball.show" class="ball">
+        <transition name="drop" v-on:before-enter="beforeEnter"
+        v-on:enter="enter" v-on:after-enter="afterEnter"
+        v-for="(ball,index) in balls">
+            <div v-show="ball.show" class="ball" :css="false">
               <div class="inner inner-hook"></div>
             </div>
           </transition>
-        </div>
+        
       </div>
 
       <transition name="fold">
@@ -40,7 +41,7 @@
                 <span class="name">{{food.name}}</span>
                 <span class="price">￥{{food.price * food.count}}</span>
                 <div class="cartcontrol-wrapper">
-                  <cartcontrol :food="food"></cartcontrol>
+                  <cartcontrol @add="addFood" :food="food"></cartcontrol>
                 </div>
               </li>
             </ul>
@@ -82,20 +83,17 @@ export default {
   },
   data() {
     return {
-      balls: [
-        {
-          show: false
-        },
-        {
-          show: false
-        },
-        {
-          show: false
-        },
-        {
-          show: false
-        }
-      ],
+      balls: [{
+        show: false
+      }, {
+        show: false
+      }, {
+        show: false
+      }, {
+        show: false
+      }, {
+        show: false
+      }],
       dropBalls: [],
       fold: true
     }
@@ -175,13 +173,14 @@ export default {
         let ball = this.balls[i]
         if (!ball.show) {
           ball.show = true
+          // this.$set(ball, 'el', target)
           ball.el = target
           this.dropBalls.push(ball)
           return
         }
       }
     },
-    beforeDrop: function(el) {
+    beforeEnter(el) {
       let count = this.balls.length
       while (count--) {
         let ball = this.balls[count]
@@ -190,35 +189,35 @@ export default {
           let x = rect.left - 32
           let y = -(window.innerHeight - rect.top - 22)
           el.style.display = ''
-          el.style.webKitTransform = `translate3d(0, ${y}px, 0)`
-          el.style.transform = `translate3d(0, ${y}px, 0)`
-          let inner = el.getElementsByClassName('inner-hook')[0]
-          inner.style.webKitTransform = `translate3d(${x}px, 0, 0)`
-          inner.style.transform = `translate3d(${x}px, 0, 0)`
+          el.style.webkitTransform = `translate3d(0,${y}px,0)`
+          el.style.transform = `translate3d(0,${y}px,0)`
+          let inner = el.querySelector('.inner-hook')
+          inner.style.webkitTransform = `translate3d(${x}px,0,0)`
+          inner.style.transform = `translate3d(${x}px,0,0)`
         }
       }
     },
-    // 此回调函数是可选项的设置
-    // 与 CSS 结合时使用
-    dropping: function(el, done) {
-      /* eslint-disable no-unused-vars */
-      let rf = el.offestHeight
+    enter(el, done) {
+      el.offsetHeight // 触发浏览器重绘，offsetWidth、offsetTop等方法都可以触发
       this.$nextTick(() => {
-        el.style.display = ''
-        el.style.webKitTransform = 'translate3d(0, 0, 0)'
-        el.style.transform = 'translate3d(0, 0, 0)'
-        let inner = el.getElementsByClassName('inner-hook')[0]
-        inner.style.webKitTransform = 'translate3d(0, 0, 0)'
-        inner.style.transform = 'translate3d(0, 0, 0)'
+        el.style.webkitTransform = 'translate3d(0,0,0)'
+        el.style.transform = 'translate3d(0,0,0)'
+        let inner = el.querySelector('.inner-hook')
+        inner.style.webkitTransform = 'translate3d(0,0,0)'
+        inner.style.transform = 'translate3d(0,0,0)'
         el.addEventListener('transitionend', done)
       })
     },
-    afterDrop: function(el) {
+    afterEnter(el) {
+      console.log(el)
       let ball = this.dropBalls.shift()
       if (ball) {
         ball.show = false
         el.style.display = 'none'
       }
+    },
+    addFood(target) {
+      this.drop(target)
     }
   },
   components: {
@@ -334,29 +333,42 @@ export default {
     }
   }
 
-  .ball-container {
-    .ball {
-      position: fixed;
-      left: 32px;
-      bottom: 22px;
-      z-index: 200;
-      transition: all .4s cubic-bezier(.44, -0.29, .75, .7);
-
-      .inner {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background: rgb(0, 160, 220);
-        transition: all .4s;
-      }
-    }
-  }
+  .ball-container{
+		.ball{
+			position:fixed;
+			left:32px;
+			bottom:22px;
+			z-index:200;
+			//y 轴 贝塞尔曲线
+			transition:all 0.5s cubic-bezier(0.49, -0.29, 0.75, 0.41);
+      // &.drop-enter,
+      // &.drop-enter-active {
+      //   transition: all 0.4s cubic-bezier(0.49,-0.29,0.75,0.41);
+      //   .inner {
+      //     width: 16px;
+      //     height: 16px;
+      //     border-radius: 50%;
+      //     background: rgb(0,160,220);
+      //     transition: all 0.4s linear;
+      //   }
+      // }
+			.inner{
+				width:16px;
+				height:16px;
+				border-radius:50%;
+				background-color:rgb(0,160,220);
+				//x 轴只需要线性缓动
+				transition:all 0.5s linear;
+			}
+		}
+	}
 
   .shopcart-list {
     position: absolute;
     top: 0;
+    left: 0;
     width: 100%;
-    height: 257px;
+    max-height: 257px;
     z-index: -1;
     transition: all .5s;
     transform: translate3d(0, -100%, 0);
@@ -387,7 +399,6 @@ export default {
     .list-content {
       padding: 0 18px;
       width: 100%;
-      height: 218px;
       overflow: hidden;
       background: #fff;
       box-sizing: border-box;

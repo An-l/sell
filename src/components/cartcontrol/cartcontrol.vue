@@ -8,7 +8,7 @@
     <div class="cart-count" v-show="food.count > 0">
       {{food.count}}
     </div>
-    <div class="cart-add" @click="addCart">
+    <div class="cart-add" @click.stop.prevent="addCart($event)">
       <i class="inner icon-add_circle"></i>
     </div>
   </div>
@@ -31,7 +31,7 @@ export default {
       } else {
         this.food.count++
       }
-      this.$emit('cartAdd', event.target)
+      this.$emit('add', event.target)
     },
     decreaseCart(event) {
       if (!event._constructed) {
