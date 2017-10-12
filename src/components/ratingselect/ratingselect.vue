@@ -62,34 +62,6 @@ export default {
       let onlyContent = !this.onlyContent
       this.$emit('toggle-only-content', onlyContent)
     }
-  },
-  computed: {
-    positives() {
-      return this.ratings.filter((rating) => {
-        return rating.rateType === 0
-      })
-    },
-    negatives() {
-      return this.ratings.filter((rating) => {
-        return rating.rateType === 1
-      })
-    },
-    ratingsList() {
-      let list = []
-      if (this.selectType === 0) {
-        list = this.positives
-      } else if (this.selectType === 1) {
-        list = this.negatives
-      } else {
-        list = this.ratings
-      }
-      if (this.onlyContent) {
-        return list.filter((rating) => {
-          return rating.text !== ''
-        })
-      }
-      return list
-    }
   }
 }
 </script>
