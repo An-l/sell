@@ -1,123 +1,198 @@
 <template>
-  <div class="food">
-    <div class="food-header">
-      <div class="pic-wrapper">
-        <img :src="food.image">
-      </div>
-      <div class="food-pannel content">
-        <div class="name">
-          {{food.name}}
-        </div>
-        <div class="extra">
-          <span class="sellCount">月销{{food.sellCount}}份</span>
-          <span class="rating">好评率{{food.rating}}%</span>
-        </div>
-        <div class="price">
-          <span class="now">￥{{food.price}}</span>
-          <span class="old" v-show="food.oldPrice">￥{{food.oldPrice}}</span>
-        </div>
-        <div class="cartcontrol-wrapper">
-          <cartcontrol :food="food"></cartcontrol>
-        </div>
-      </div>
-    </div>
-    <div class="food-pannel food-desc">
-      <div class="title">商品介绍</div>
-      <p class="content">{{food.info}}</p>
-    </div>
-    <div class="food-pannel food-rating">
-      <div class="rating-header">
-        <div class="title">商品评价</div>
-        <ul class="rating-type">
-          <li class="rating-type-item all">
-            全部
-            <span></span>
-          </li>
-          <li class="rating-type-item good">
-            推荐
-            <span></span>
-          </li>
-          <li class="rating-type-item bad">
-            吐槽
-            <span></span>
-          </li>
-        </ul>
-        <div class="only-read-content">
-          <i class="icon icon-check_circle"></i> 只看有内容的评价
-        </div>
-      </div>
-      <ul class="rating-list">
-        <li class="list-item" v-for="(rating, index) in food.ratings" :key="index">
-          <div class="time">{{rating.rateTime}}</div>
-          <div class="text">{{rating.text}}</div>
-          <div class="user">
-            <span class="name">{{rating.username}}</span>
-            <img :src="rating.avatar" class="avatar">
+  <transition name="move">
+    <div class="food-wrapper" v-show="showFlag">
+      <div class="food">
+        <div class="food-header">
+          <div class="image-wrapper">
+            <img :src="food.image">
+            <div class="back" @click="hide">
+              <i class="icon-arrow_lift"></i>
+            </div>
           </div>
-        </li>
-      </ul>
+          <div class="food-pannel food-content">
+            <div class="name">
+              {{food.name}}
+            </div>
+            <div class="extra">
+              <span class="sellCount">月销{{food.sellCount}}份</span>
+              <span class="rating">好评率{{food.rating}}%</span>
+            </div>
+            <div class="price">
+              <span class="now">￥{{food.price}}</span>
+              <span class="old" v-show="food.oldPrice">￥{{food.oldPrice}}</span>
+            </div>
+            <div class="cartcontrol-wrapper">
+              <cartcontrol :food="food" @add="addCart" v-show="food.count"></cartcontrol>
+            </div>
+            <transition name="fade">
+              <div class="add-cart" v-show="!food.count || food.count === 0" @click="_addFirst">加入购物车</div>
+            </transition>
+          </div>
+        </div>
+        <split></split>
+        <div class="food-pannel food-desc">
+          <div class="title">商品介绍</div>
+          <p class="content">{{food.info}}</p>
+        </div>
+        <split></split>
+        <div class="food-pannel food-rating">
+          <div class="title">商品评价</div>
+          <div class="ratingselect-wrapper">
+            <ratingselect @rating-type="selectRatingType" @toggle-only-content="toggleOnlyContent" :ratings="food.ratings" :select-type="selectType" :only-content="onlyContent" :desc="desc"></ratingselect>
+          </div>
+          <ul class="rating-list" v-show="food.ratings.length">
+            <li class="list-item" v-for="(rating, index) in ratingsList" :key="index">
+              <div class="time">{{rating.rateTime | formatDateFilter}}</div>
+              <div class="text">
+                <i class="icon" :class="{'icon-thumb_up': rating.rateType === 0, 'icon-thumb_down': rating.rateType === 1}"></i>
+                {{rating.text}}
+              </div>
+              <div class="user">
+                <span class="name">{{rating.username}}</span>
+                <img :src="rating.avatar" class="avatar">
+              </div>
+            </li>
+          </ul>
+          <div class="no-rating" v-show="!food.ratings || !food.ratings.length">暂无评价</div>
+        </div>
+      </div>
     </div>
-  </div>
+  </transition>
 </template>
 
 <script>
+import BScroll from 'better-scroll'
+import cartcontrol from 'components/cartcontrol/cartcontrol'
+import split from 'components/split/split'
+import ratingselect from 'components/ratingselect/ratingselect'
+import { formatDate } from 'common/js/util.js'
+// const POSITIVETYPE = 0
+// const NEGATIVE = 1
+const ALLTPYE = 2
+
 export default {
   props: {
     food: {
-      type: Object,
-      default() {
-        return {
-          name: '皮蛋瘦肉粥',
-          price: 10,
-          oldPrice: '',
-          description: '咸粥',
-          sellCount: 229,
-          rating: 100,
-          info: '一碗皮蛋瘦肉粥，总是我到粥店时的不二之选。香浓软滑，饱腹暖心，皮蛋的Q弹与瘦肉的滑嫩伴着粥香溢于满口，让人喝这样的一碗粥也觉得心满意足',
-          ratings: [
-            {
-              username: '3******c',
-              rateTime: 1469281964000,
-              rateType: 0,
-              text: '很喜欢的粥',
-              avatar: 'http://static.galileo.xiaojukeji.com/static/tms/default_header.png'
-            },
-            {
-              username: '2******3',
-              rateTime: 1469271264000,
-              rateType: 0,
-              text: '',
-              avatar: 'http://static.galileo.xiaojukeji.com/static/tms/default_header.png'
-            },
-            {
-              username: '3******b',
-              rateTime: 1469261964000,
-              rateType: 1,
-              text: '',
-              avatar: 'http://static.galileo.xiaojukeji.com/static/tms/default_header.png'
-            }
-          ],
-          icon: 'http://fuss10.elemecdn.com/c/cd/c12745ed8a5171e13b427dbc39401jpeg.jpeg?imageView2/1/w/114/h/114',
-          image: 'http://fuss10.elemecdn.com/c/cd/c12745ed8a5171e13b427dbc39401jpeg.jpeg?imageView2/1/w/750/h/750'
+      type: Object
+    }
+  },
+  methods: {
+    show() {
+      this.showFlag = true
+      this.selectType = ALLTPYE
+      this.onlyContent = true
+      this.$nextTick(() => {
+        if (!this.foodScroll) {
+          this.foodScroll = new BScroll('.food-wrapper', {
+            click: true
+          })
+        } else {
+          this.foodScroll.refresh()
         }
+      })
+    },
+    hide() {
+      this.showFlag = false
+    },
+    _addFirst(event) {
+      if (!this.food.count) {
+        this.$set(this.food, 'count', 1)
+      } else {
+        this.food.count++
       }
+      this.$emit('add', event.target)
+    },
+    addCart(target) {
+      this.$emit('add', target)
+    },
+    selectRatingType(type) {
+      this.selectType = type
+      this.$nextTick(() => {
+        this.foodScroll.refresh()
+      })
+    },
+    toggleOnlyContent(onlyContent) {
+      this.onlyContent = onlyContent
+      this.$nextTick(() => {
+        this.foodScroll.refresh()
+      })
+    }
+  },
+  computed: {
+    positives() {
+      console.log(this.food.ratings)
+      return this.food.ratings.filter((rating) => {
+        return rating.rateType === 0
+      })
+    },
+    negatives() {
+      return this.food.ratings.filter((rating) => {
+        return rating.rateType === 1
+      })
+    },
+    ratingsList() {
+      let list = []
+      if (this.selectType === 0) {
+        list = this.positives
+      } else if (this.selectType === 1) {
+        list = this.negatives
+      } else {
+        list = this.food.ratings
+      }
+      if (this.onlyContent) {
+        return list.filter((rating) => {
+          return rating.text !== ''
+        })
+      }
+      return list
+    }
+  },
+  data() {
+    return {
+      showFlag: false,
+      selectType: ALLTPYE,
+      onlyContent: true,
+      desc: {
+        all: '全部',
+        positive: '推荐',
+        negative: '吐槽'
+      }
+    }
+  },
+  components: {
+    cartcontrol,
+    split,
+    ratingselect
+  },
+  filters: {
+    formatDateFilter(time) {
+      let date = new Date(time)
+      return formatDate(date, 'yyyy-MM-dd hh:mm')
     }
   }
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" type="text/css">
 @import '../../common/scss/mixin.scss';
 
-.food {
+.food-wrapper {
   position: fixed;
   top: 0;
   left: 0;
   bottom: 30px;
   width: 100%;
-  background: #f3f5f7;
+  background: #fff;
+  transform: translate3d(0, 0, 0);
+  transition: all .2s linear;
+
+  &.move-enter,
+  &.move-leave-active {
+    transform: translate3d(100%, 0, 0);
+  }
+
   .food-pannel {
-    margin-bottom: 16px;
+    // margin-bottom: 16px;
     background: #fff;
 
     .title {
@@ -126,14 +201,32 @@ export default {
     }
   }
   .food-header {
-    .pic-wrapper {
-      height: 375px;
+    .image-wrapper {
+      position: relative;
+      width: 100%;
+      height: 0;
+      padding-top: 100%;
       img {
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
       }
+      .back {
+        position: absolute;
+        top: 10px;
+        left: 0;
+      }
+      .icon-arrow_lift {
+        display: block;
+        padding: 10px;
+        font-size: 20px;
+        color: #fff;
+      }
     }
-    .content {
+    .food-content {
+      position: relative;
       padding: 18px;
       .name {
         margin-bottom: 8px;
@@ -165,6 +258,30 @@ export default {
           color: rgb(147, 153, 159);
         }
       }
+
+      .cartcontrol-wrapper {
+        position: absolute;
+        bottom: 18px;
+        right: 18px;
+      }
+      .add-cart {
+        position: absolute;
+        bottom: 20px;
+        right: 18px;
+        padding: 6px 12px;
+        line-height: 12px;
+        font-size: 10px;
+        border-radius: 12px;
+        color: #fff;
+        background-color: rgb(0, 160, 220);
+        opacity: 1;
+        transition: all .2s;
+
+        &.fade-enter,
+        &.fade-leave-active {
+          opacity: 0;
+        }
+      }
     }
   }
   .food-desc {
@@ -177,48 +294,16 @@ export default {
     }
   }
   .food-rating {
-    .rating-header {
-      padding: 18px 18px 12px 18px;
-      border-bottom: 1px solid rgba(7, 17, 27, 0.1);
-      .rating-type {
-        margin-bottom: 12px;
-        padding: 12px 0 18px 0;
-        font-size: 0;
-        @include border-1px(rgba(7, 17, 27, 0.1));
-
-        .rating-type-item {
-          display: inline-block;
-          margin-right: 8px;
-          padding: 8px 12px;
-          font-size: 12px;
-          &.all {
-            color: #fff;
-            background: rgb(0, 160, 220);
-          }
-          &.good {
-            color: rgb(77, 85, 93);
-            background: rgba(0, 160, 220, 0.2);
-          }
-          &.bad {
-            color: rgb(77, 85, 93);
-            background: rgba(77, 78, 93, 0.2);
-          }
-        }
-      }
-      .only-read-content {
-        line-height: 24px;
-        font-size: 12px;
-        color: rgb(147, 153, 159);
-        .icon {
-          display: inline-block;
-          vertical-align: top;
-          font-size: 24px;
-          color: rgb(147, 153, 159);
-        }
-      }
+    padding-top: 18px;
+    padding-bottom: 20px;
+    
+    .title {
+      margin-bottom: 0;
+      margin-left: 18px;
     }
     .rating-list {
       margin: 0 18px;
+
       .list-item {
         position: relative;
         padding: 16px 0;
@@ -233,8 +318,18 @@ export default {
           color: rgb(147, 153, 159);
         }
         .text {
+          line-height: 16px;
           font-size: 12px;
           color: rgb(7, 17, 27);
+
+          .icon {
+            margin-right: 4px;
+            font-size: 12px;
+            color: rgb(147, 153, 159);
+            &.icon-thumb_up {
+              color: rgb(0, 160, 220);
+            }
+          }
         }
         .user {
           position: absolute;
@@ -257,6 +352,11 @@ export default {
           }
         }
       }
+    }
+    .no-rating {
+      padding: 16px 18px;
+      font-size: 12px;
+      color: rgb(147, 153, 159);
     }
   }
 }

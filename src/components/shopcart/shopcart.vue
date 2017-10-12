@@ -19,14 +19,14 @@
         </div>
       </div>
       <div class="ball-container">
-        <transition name="drop" v-on:before-enter="beforeEnter"
-        v-on:enter="enter" v-on:after-enter="afterEnter"
-        v-for="(ball,index) in balls">
+        <div v-for="(ball,index) in balls" :key="index">
+          <transition name="drop" v-on:before-enter="beforeEnter"
+          v-on:enter="enter" v-on:after-enter="afterEnter">
             <div v-show="ball.show" class="ball" :css="false">
               <div class="inner inner-hook"></div>
             </div>
           </transition>
-        
+        </div>
       </div>
 
       <transition name="fold">
@@ -169,6 +169,7 @@ export default {
       alert(`需要支付${this.totalPrice}元！`)
     },
     drop(target) {
+      console.log(target)
       for (let i = 0; i < this.balls.length; i++) {
         let ball = this.balls[i]
         if (!ball.show) {
@@ -209,7 +210,6 @@ export default {
       })
     },
     afterEnter(el) {
-      console.log(el)
       let ball = this.dropBalls.shift()
       if (ball) {
         ball.show = false

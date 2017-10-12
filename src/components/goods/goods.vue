@@ -14,7 +14,7 @@
         <li v-for="(item, index) in goods" :key="index" class="food-list food-list-hook">
           <h2 class="title">{{item.name}}</h2>
           <ul>
-            <li v-for="(food, idex) in item.foods" :key="idex" class="food-item border-1px">
+            <li @click="selectFood(food, $event)" v-for="(food, idex) in item.foods" :key="idex" class="food-item border-1px">
               <div class="icon">
                 <img :src="food.icon" width="50" height="50">
               </div>
@@ -39,7 +39,8 @@
       </ul>
     </div>
     <shopcart :delivery-price="seller.deliveryPrice" :min-price="seller.minPrice" :select-foods="selectFoods" ref="shopcart"></shopcart>
-    <food :food="food"></food>
+    <food></food>
+    <food :food="selectedFood" @add="_drop" ref="food"></food>
   </div>
 </template>
 
@@ -62,7 +63,8 @@ export default {
     return {
       goods: [],
       listHeight: [],
-      scrollY: 0
+      scrollY: 0,
+      selectedFood: {}
     }
   },
   computed: {
@@ -147,6 +149,15 @@ export default {
     },
     addFood(target) {
       this._drop(target)
+    },
+    selectFood(food, event) {
+      if (!event._constructed) {
+        return
+      }
+      this.selectedFood = food
+      this.$nextTick(() => {
+        this.$refs.food.show()
+      })
     }
   },
   components: {
