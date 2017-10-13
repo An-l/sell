@@ -1,6 +1,6 @@
-# sell
+# 使用Vue2.0构建饿了么外卖平台
 
-> A Vue.js project
+> vue2.0、vue-router、axios、webpack、eslint、better-scroll
 
 ## Build Setup
 
