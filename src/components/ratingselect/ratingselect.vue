@@ -17,13 +17,13 @@
     <div @click="toggleContent" class="switch" :class="{'on': onlyContent}">
       <i class="icon icon-check_circle"></i> 只看有内容的评价
     </div>
-    
+
   </div>
 </template>
 
 <script>
-// const POSITIVETYPE = 0
-// const NEGATIVE = 1
+const POSITIVETYPE = 0
+const NEGATIVE = 1
 const ALLTPYE = 2
 
 export default {
@@ -61,6 +61,18 @@ export default {
     toggleContent() {
       let onlyContent = !this.onlyContent
       this.$emit('toggle-only-content', onlyContent)
+    }
+  },
+  computed: {
+    positives() {
+      return this.ratings.filter((rating) => {
+        return rating.rateType === POSITIVETYPE
+      })
+    },
+    negatives() {
+      return this.ratings.filter((rating) => {
+        return rating.rateType === NEGATIVE
+      })
     }
   }
 }
@@ -120,7 +132,5 @@ export default {
       font-size: 24px;
     }
   }
-
-  
 }
 </style>

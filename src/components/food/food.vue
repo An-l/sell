@@ -40,8 +40,8 @@
           <div class="ratingselect-wrapper">
             <ratingselect @rating-type="selectRatingType" @toggle-only-content="toggleOnlyContent" :ratings="food.ratings" :select-type="selectType" :only-content="onlyContent" :desc="desc"></ratingselect>
           </div>
-          <ul class="rating-list" v-show="food.ratings.length">
-            <li class="list-item" v-for="(rating, index) in ratingsList" :key="index">
+          <ul class="rating-list" v-show="food.ratings && food.ratings.length">
+            <li v-show="needShow(rating.rateType, rating.text)" class="list-item" v-for="(rating, index) in food.ratings" :key="index">
               <div class="time">{{rating.rateTime | formatDateFilter}}</div>
               <div class="text">
                 <i class="icon" :class="{'icon-thumb_up': rating.rateType === 0, 'icon-thumb_down': rating.rateType === 1}"></i>
@@ -116,36 +116,46 @@ export default {
       this.$nextTick(() => {
         this.foodScroll.refresh()
       })
+    },
+    needShow(type, text) {
+      if (this.onlyContent && !text) {
+        return false
+      }
+      if (this.selectType === ALLTPYE) {
+        return true
+      } else {
+        return type === this.selectType
+      }
     }
   },
   computed: {
-    positives() {
-      console.log(this.food.ratings)
-      return this.food.ratings.filter((rating) => {
-        return rating.rateType === 0
-      })
-    },
-    negatives() {
-      return this.food.ratings.filter((rating) => {
-        return rating.rateType === 1
-      })
-    },
-    ratingsList() {
-      let list = []
-      if (this.selectType === 0) {
-        list = this.positives
-      } else if (this.selectType === 1) {
-        list = this.negatives
-      } else {
-        list = this.food.ratings
-      }
-      if (this.onlyContent) {
-        return list.filter((rating) => {
-          return rating.text !== ''
-        })
-      }
-      return list
-    }
+    // positives() {
+    //   console.log(this.food.ratings)
+    //   return this.food.ratings.filter((rating) => {
+    //     return rating.rateType === 0
+    //   })
+    // },
+    // negatives() {
+    //   return this.food.ratings.filter((rating) => {
+    //     return rating.rateType === 1
+    //   })
+    // },
+    // ratingsList() {
+    //   let list = []
+    //   if (this.selectType === 0) {
+    //     list = this.positives
+    //   } else if (this.selectType === 1) {
+    //     list = this.negatives
+    //   } else {
+    //     list = this.food.ratings
+    //   }
+    //   if (this.onlyContent) {
+    //     return list.filter((rating) => {
+    //       return rating.text !== ''
+    //     })
+    //   }
+    //   return list
+    // }
   },
   data() {
     return {
